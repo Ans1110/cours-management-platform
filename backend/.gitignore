@@ -1,0 +1,145 @@
+# ========================================
+# Backend - Spring Boot/Java .gitignore
+# ========================================
+
+# -------------------- Build Output --------------------
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+out/
+
+# -------------------- Maven --------------------
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.flattened-pom.xml
+
+# -------------------- Gradle --------------------
+.gradle/
+**/build/
+!src/**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# -------------------- IDE: STS/Eclipse --------------------
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# -------------------- IDE: IntelliJ IDEA --------------------
+.idea/
+*.iws
+*.iml
+*.ipr
+*.jfr
+
+# -------------------- IDE: NetBeans --------------------
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# -------------------- IDE: VS Code --------------------
+.vscode/
+
+# -------------------- Logs --------------------
+*.log
+logs/
+log/
+spring.log
+*.log.gz
+*.log.*.gz
+
+# -------------------- Spring Boot --------------------
+# Local configuration files
+application-local.yml
+application-local.properties
+application-secret.yml
+application-secret.properties
+application-dev.yml
+application-dev.properties
+
+# Spring Boot DevTools
+.sts4-cache/
+
+# -------------------- Database --------------------
+# H2 Database
+*.h2.db
+*.mv.db
+*.trace.db
+*.lock.db
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# -------------------- Testing --------------------
+# Test output
+test-output/
+surefire-reports/
+failsafe-reports/
+# Coverage
+jacoco.exec
+*.exec
+
+# -------------------- Temporary Files --------------------
+*.tmp
+*.bak
+*.swp
+*~
+
+# -------------------- OS --------------------
+.DS_Store
+Thumbs.db
+
+# -------------------- Crash Files --------------------
+hs_err_pid*
+replay_pid*
+*.hprof
+
+# -------------------- Environment & Secrets --------------------
+.env
+.env.local
+*.pem
+*.key
+*.p12
+secrets/
+
+# -------------------- Docker --------------------
+.docker/
+docker-compose.override.yml
+
+# -------------------- File Uploads --------------------
+uploads/
+files/
+storage/
+!**/src/main/resources/static/
+
+# -------------------- API Documentation --------------------
+# Swagger/OpenAPI generated files (if not version-controlled)
+# openapi.json
+# openapi.yaml
+
+# -------------------- Native Image (GraalVM) --------------------
+graalvm-reachability-metadata/
+native-image/

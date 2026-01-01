@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: course-management
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/course_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:Aa19850228}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid, profile, email
+          github:
+            client-id: ${GITHUB_CLIENT_ID:Ov23liAasWvtjG7AuATr}
+            client-secret: ${GITHUB_CLIENT_SECRET:62ace9d405541757d7de52a3e17c90418ee67058}
+            scope: user:email, read:user
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  type-aliases-package: com.coursemanagement.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+jwt:
+  secret: ${JWT_SECRET:a9f3c2e6c1b84e9e91a4c0b6fbb3e6a7f5d1c9d4e0a7c8b6f2d3a9e4c1b7f8}
+  access-token-expiration: 900000      # 15 minutes
+  refresh-token-expiration: 604800000  # 7 days
+
+logging:
+  level:
+    com.coursemanagement: DEBUG
+    org.springframework.security: DEBUG
