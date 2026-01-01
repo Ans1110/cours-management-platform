@@ -16,6 +16,22 @@ import {
 import { courseSchema, type CourseInput } from "@/schemas";
 import type { Course } from "@/types";
 
+// Helper function for date-based progress calculation
+function calculateProgress(startDate?: string, endDate?: string): number {
+  if (!startDate || !endDate) return 0;
+
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  const now = Date.now();
+
+  if (now <= start) return 0;
+  if (now >= end) return 100;
+
+  const total = end - start;
+  const elapsed = now - start;
+  return Math.round((elapsed / total) * 100);
+}
+
 export default function CoursesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -168,13 +184,18 @@ export default function CoursesPage() {
                     </span>
                   </div>
                   <span className="text-sm font-medium text-white">
-                    {course.progress}%
+                    {calculateProgress(course.startDate, course.endDate)}%
                   </span>
                 </div>
                 <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
-                    style={{ width: `${course.progress}%` }}
+                    style={{
+                      width: `${calculateProgress(
+                        course.startDate,
+                        course.endDate
+                      )}%`,
+                    }}
                   />
                 </div>
               </div>
