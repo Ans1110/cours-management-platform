@@ -7,9 +7,11 @@ import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import DashboardPage from "@/pages/DashboardPage";
 import CoursesPage from "@/pages/CoursesPage";
+import CourseDetailPage from "@/pages/CourseDetailPage";
 import NotesPage from "@/pages/NotesPage";
 import TodosPage from "@/pages/TodosPage";
 import CurriculumsPage from "@/pages/CurriculumsPage";
+import OAuthCallbackPage from "@/pages/OAuthCallbackPage";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -41,6 +43,13 @@ function AppContent() {
           isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />
         }
       />
+      <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+      <Route
+        path="/register"
+        element={
+          isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />
+        }
+      />
       <Route
         path="/"
         element={
@@ -51,6 +60,7 @@ function AppContent() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="courses" element={<CoursesPage />} />
+        <Route path="courses/:id" element={<CourseDetailPage />} />
         <Route path="notes" element={<NotesPage />} />
         <Route path="todos" element={<TodosPage />} />
         <Route path="curriculums" element={<CurriculumsPage />} />

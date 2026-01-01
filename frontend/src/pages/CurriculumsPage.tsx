@@ -1,91 +1,118 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2, X, Loader2, Layers, Target } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Plus, X, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { curriculumsApi } from "@/api";
-import { curriculumSchema, type CurriculumInput } from "@/schemas";
-import type { Curriculum } from "@/types";
+import { coursesApi } from "@/api";
+import type { Course } from "@/types";
+
+// Define time periods
+const PERIODS = [
+  { id: 1, label: "1", time: "08:00-08:50" },
+  { id: 2, label: "2", time: "09:00-09:50" },
+  { id: 3, label: "3", time: "10:00-10:50" },
+  { id: 4, label: "4", time: "11:00-11:50" },
+  { id: "lunch", label: "LUNCH", time: "12:00-13:00" },
+  { id: 5, label: "5", time: "13:00-13:50" },
+  { id: 6, label: "6", time: "14:00-14:50" },
+  { id: 7, label: "7", time: "15:00-15:50" },
+  { id: 8, label: "8", time: "16:00-16:50" },
+  { id: 9, label: "9", time: "17:00-17:50" },
+];
+
+const DAYS = ["MON", "TUE", "WED", "THU", "FRI"];
+
+type TimetableSlot = {
+  day: string;
+  period: string | number;
+  courseId: number | null;
+};
+
+// Local storage key for timetable
+const TIMETABLE_KEY = "curriculum_timetable";
 
 export default function CurriculumsPage() {
-  const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCurriculum, setEditingCurriculum] = useState<Curriculum | null>(
-    null
-  );
+  const [isSelectingCourse, setIsSelectingCourse] = useState<{
+    day: string;
+    period: string | number;
+  } | null>(null);
 
-  const { data: curriculums = [], isLoading } = useQuery({
-    queryKey: ["curriculums"],
-    queryFn: curriculumsApi.list,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: curriculumsApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["curriculums"] });
-      closeModal();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Curriculum> }) =>
-      curriculumsApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["curriculums"] });
-      closeModal();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: curriculumsApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["curriculums"] });
-    },
-  });
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CurriculumInput>({
-    resolver: zodResolver(curriculumSchema),
-  });
-
-  const openModal = (curriculum?: Curriculum) => {
-    if (curriculum) {
-      setEditingCurriculum(curriculum);
-      reset({
-        title: curriculum.title,
-        description: curriculum.description || "",
-        goal: curriculum.goal || "",
+  // Load timetable from localStorage
+  const [timetable, setTimetable] = useState<TimetableSlot[]>(() => {
+    const saved = localStorage.getItem(TIMETABLE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    // Initialize empty timetable
+    const initial: TimetableSlot[] = [];
+    DAYS.forEach((day) => {
+      PERIODS.forEach((period) => {
+        if (period.id !== "lunch") {
+          initial.push({ day, period: period.id, courseId: null });
+        }
       });
-    } else {
-      setEditingCurriculum(null);
-      reset({ title: "", description: "", goal: "" });
-    }
-    setIsModalOpen(true);
+    });
+    return initial;
+  });
+
+  const { data: courses = [], isLoading: coursesLoading } = useQuery({
+    queryKey: ["courses"],
+    queryFn: coursesApi.list,
+  });
+
+  const coursesById = useMemo(() => {
+    const map: Record<number, Course> = {};
+    courses.forEach((c) => {
+      map[c.id] = c;
+    });
+    return map;
+  }, [courses]);
+
+  const saveTimetable = (newTimetable: TimetableSlot[]) => {
+    setTimetable(newTimetable);
+    localStorage.setItem(TIMETABLE_KEY, JSON.stringify(newTimetable));
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingCurriculum(null);
-    reset();
+  const getSlot = (
+    day: string,
+    period: string | number
+  ): TimetableSlot | undefined => {
+    return timetable.find((s) => s.day === day && s.period === period);
   };
 
-  const onSubmit = (data: CurriculumInput) => {
-    if (editingCurriculum) {
-      updateMutation.mutate({ id: editingCurriculum.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
+  const assignCourse = (
+    day: string,
+    period: string | number,
+    courseId: number | null
+  ) => {
+    const newTimetable = timetable.map((slot) => {
+      if (slot.day === day && slot.period === period) {
+        return { ...slot, courseId };
+      }
+      return slot;
+    });
+    saveTimetable(newTimetable);
+    setIsSelectingCourse(null);
   };
 
-  if (isLoading) {
+  const clearSlot = (day: string, period: string | number) => {
+    assignCourse(day, period, null);
+  };
+
+  const getCourseColor = (courseId: number) => {
+    const colors = [
+      "bg-blue-500/30 border-blue-400",
+      "bg-purple-500/30 border-purple-400",
+      "bg-green-500/30 border-green-400",
+      "bg-orange-500/30 border-orange-400",
+      "bg-pink-500/30 border-pink-400",
+      "bg-cyan-500/30 border-cyan-400",
+      "bg-yellow-500/30 border-yellow-400",
+      "bg-red-500/30 border-red-400",
+    ];
+    return colors[courseId % colors.length];
+  };
+
+  if (coursesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
@@ -97,168 +124,165 @@ export default function CurriculumsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Curriculums</h1>
-          <p className="text-slate-400">
-            Build your personalized learning paths
-          </p>
+          <h1 className="text-2xl font-bold text-white">Weekly Schedule</h1>
+          <p className="text-slate-400">Organize your course schedule</p>
         </div>
-        <Button
-          onClick={() => openModal()}
-          className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Curriculum
-        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {curriculums.map((curriculum) => (
-          <Card
-            key={curriculum.id}
-            className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-all duration-300"
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-pink-500/20 rounded-lg">
-                    <Layers className="h-5 w-5 text-pink-400" />
-                  </div>
-                  <CardTitle className="text-lg text-white">
-                    {curriculum.title}
-                  </CardTitle>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => openModal(curriculum)}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+      {/* Timetable Grid */}
+      <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="bg-slate-700/50">
+                  <th className="w-20 p-3 text-left text-slate-400 font-medium border-r border-slate-600"></th>
+                  {DAYS.map((day) => (
+                    <th
+                      key={day}
+                      className="p-3 text-center text-white font-semibold border-r border-slate-600 last:border-r-0"
+                    >
+                      {day}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {PERIODS.map((period) => (
+                  <tr
+                    key={period.id}
+                    className={period.id === "lunch" ? "bg-slate-600/30" : ""}
                   >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(curriculum.id)}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {curriculum.description && (
-                <p className="text-sm text-slate-400 mb-3 line-clamp-2">
-                  {curriculum.description}
-                </p>
-              )}
-              {curriculum.goal && (
-                <div className="flex items-start gap-2 p-3 bg-slate-700/30 rounded-lg">
-                  <Target className="h-4 w-4 text-pink-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-slate-300 line-clamp-2">
-                    {curriculum.goal}
+                    <td className="p-2 border-r border-t border-slate-600 text-center">
+                      <div className="text-sm font-medium text-slate-300">
+                        {period.label}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {period.time}
+                      </div>
+                    </td>
+                    {DAYS.map((day) => {
+                      if (period.id === "lunch") {
+                        return (
+                          <td
+                            key={day}
+                            className="p-2 border-r border-t border-slate-600 last:border-r-0"
+                          >
+                            <div className="h-12 flex items-center justify-center">
+                              <span className="text-slate-500 text-sm">—</span>
+                            </div>
+                          </td>
+                        );
+                      }
+
+                      const slot = getSlot(day, period.id);
+                      const course = slot?.courseId
+                        ? coursesById[slot.courseId]
+                        : null;
+                      const isSelecting =
+                        isSelectingCourse?.day === day &&
+                        isSelectingCourse?.period === period.id;
+
+                      return (
+                        <td
+                          key={day}
+                          className="p-1 border-r border-t border-slate-600 last:border-r-0"
+                        >
+                          {course ? (
+                            <div
+                              className={`h-14 rounded-lg border-l-4 px-2 py-1 ${getCourseColor(
+                                course.id
+                              )} relative group`}
+                            >
+                              <p className="text-sm font-medium text-white truncate">
+                                {course.title}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {course.category || "Course"}
+                              </p>
+                              <button
+                                onClick={() => clearSlot(day, period.id)}
+                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-700 rounded"
+                              >
+                                <X size={12} className="text-slate-400" />
+                              </button>
+                            </div>
+                          ) : isSelecting ? (
+                            <div className="h-14 bg-slate-700/50 rounded-lg p-1 overflow-y-auto">
+                              <div className="space-y-1">
+                                {courses.map((c) => (
+                                  <button
+                                    key={c.id}
+                                    onClick={() =>
+                                      assignCourse(day, period.id, c.id)
+                                    }
+                                    className="w-full text-left text-xs p-1 hover:bg-slate-600 rounded truncate text-slate-300"
+                                  >
+                                    {c.title}
+                                  </button>
+                                ))}
+                                <button
+                                  onClick={() => setIsSelectingCourse(null)}
+                                  className="w-full text-left text-xs p-1 text-slate-500 hover:bg-slate-600 rounded"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                setIsSelectingCourse({ day, period: period.id })
+                              }
+                              className="h-14 w-full rounded-lg border-2 border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-700/30 transition-colors flex items-center justify-center"
+                            >
+                              <Plus size={16} className="text-slate-500" />
+                            </button>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Available Courses */}
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white text-lg">
+            Available Courses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {courses.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {courses.map((course) => (
+                <div
+                  key={course.id}
+                  className={`px-3 py-2 rounded-lg border-l-4 ${getCourseColor(
+                    course.id
+                  )} cursor-default`}
+                >
+                  <p className="text-sm font-medium text-white">
+                    {course.title}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {course.category || "No category"}
                   </p>
                 </div>
-              )}
-              <p className="text-xs text-slate-500 mt-3">
-                Created {new Date(curriculum.createdAt).toLocaleDateString()}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {curriculums.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-slate-400 mb-4">
-            No curriculums yet. Create your first learning path!
-          </p>
-          <Button
-            onClick={() => openModal()}
-            className="bg-gradient-to-r from-pink-500 to-rose-500"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Curriculum
-          </Button>
-        </div>
-      )}
-
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white">
-                {editingCurriculum ? "Edit Curriculum" : "New Curriculum"}
-              </CardTitle>
-              <button
-                onClick={closeModal}
-                className="text-slate-400 hover:text-white"
-              >
-                <X size={20} />
-              </button>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-slate-200">Title *</Label>
-                  <Input
-                    {...register("title")}
-                    className="bg-slate-700/50 border-slate-600 text-white"
-                    placeholder="Curriculum title"
-                  />
-                  {errors.title && (
-                    <p className="text-sm text-red-400">
-                      {errors.title.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-200">Description</Label>
-                  <textarea
-                    {...register("description")}
-                    className="w-full h-20 px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md text-white resize-none"
-                    placeholder="What is this learning path about?"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-200">Goal</Label>
-                  <textarea
-                    {...register("goal")}
-                    className="w-full h-20 px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md text-white resize-none"
-                    placeholder="What do you want to achieve?"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={closeModal}
-                    className="flex-1 text-slate-400 hover:text-white"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500"
-                    disabled={
-                      createMutation.isPending || updateMutation.isPending
-                    }
-                  >
-                    {createMutation.isPending || updateMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : editingCurriculum ? (
-                      "Save Changes"
-                    ) : (
-                      "Create Curriculum"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-400 text-sm">
+              No courses available. Create some courses first!
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

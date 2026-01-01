@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -137,9 +138,11 @@ export default function CoursesPage() {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0 pr-4">
-                  <CardTitle className="text-lg text-white truncate">
-                    {course.title}
-                  </CardTitle>
+                  <Link to={`/courses/${course.id}`}>
+                    <CardTitle className="text-lg text-white truncate hover:text-purple-400 transition-colors cursor-pointer">
+                      {course.title}
+                    </CardTitle>
+                  </Link>
                   <p className="text-sm text-slate-400 mt-1">
                     {course.category || "Uncategorized"}
                   </p>
