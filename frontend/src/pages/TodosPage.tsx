@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -16,52 +15,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { todosApi } from "@/api";
+import {
+  useTodos,
+  useCreateTodo,
+  useUpdateTodo,
+  useDeleteTodo,
+  useUpdateTodoStatus,
+} from "@/hooks";
 import { todoSchema, type TodoInput } from "@/schemas";
 import type { Todo } from "@/types";
 
 export default function TodosPage() {
-  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [filter, setFilter] = useState<string>("all");
 
-  const { data: todos = [], isLoading } = useQuery({
-    queryKey: ["todos"],
-    queryFn: () => todosApi.list(),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: todosApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
-      closeModal();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Todo> }) =>
-      todosApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
-      closeModal();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: todosApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
-    },
-  });
-
-  const statusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
-      todosApi.updateStatus(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["todos"] });
-    },
-  });
+  const { data: todos = [], isLoading } = useTodos();
+  const createMutation = useCreateTodo();
+  const updateMutation = useUpdateTodo();
+  const deleteMutation = useDeleteTodo();
+  const statusMutation = useUpdateTodoStatus();
 
   const {
     register,

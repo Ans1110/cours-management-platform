@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
@@ -8,43 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { coursesApi } from "@/api";
+import {
+  useCourses,
+  useCreateCourse,
+  useUpdateCourse,
+  useDeleteCourse,
+} from "@/hooks";
 import { courseSchema, type CourseInput } from "@/schemas";
 import type { Course } from "@/types";
 
 export default function CoursesPage() {
-  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
-  const { data: courses = [], isLoading } = useQuery({
-    queryKey: ["courses"],
-    queryFn: coursesApi.list,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: coursesApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
-      closeModal();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Course> }) =>
-      coursesApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
-      closeModal();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: coursesApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
-    },
-  });
+  const { data: courses = [], isLoading } = useCourses();
+  const createMutation = useCreateCourse();
+  const updateMutation = useUpdateCourse();
+  const deleteMutation = useDeleteCourse();
 
   const {
     register,
@@ -88,9 +67,12 @@ export default function CoursesPage() {
 
   const onSubmit = (data: CourseInput) => {
     if (editingCourse) {
-      updateMutation.mutate({ id: editingCourse.id, data });
+      updateMutation.mutate(
+        { id: editingCourse.id, data },
+        { onSuccess: closeModal }
+      );
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(data, { onSuccess: closeModal });
     }
   };
 
