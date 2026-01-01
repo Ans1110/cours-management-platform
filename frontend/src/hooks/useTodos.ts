@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { todosApi } from "@/api";
-import type { Todo, CreateTodo, UpdateTodo } from "@/types";
+import type { CreateTodo, UpdateTodo } from "@/types";
 
 export function useTodos() {
   return useQuery({
     queryKey: ["todos"],
-    queryFn: todosApi.list,
+    queryFn: () => todosApi.list(),
   });
 }
 

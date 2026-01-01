@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { coursesApi } from "@/api";
-import type { Course, CreateCourse, UpdateCourse } from "@/types";
+import type { CreateCourse, UpdateCourse } from "@/types";
 
 export function useCourses() {
   return useQuery({
