@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -25,6 +26,10 @@ public class Course {
     private String status;
 
     private Integer progress;
+
+    private LocalDate startDate;
+
+    private LocalDate endDate;
 
     private String coverUrl;
 

@@ -28,6 +28,8 @@ export const courseSchema = z.object({
     .enum(["not_started", "in_progress", "completed"])
     .default("not_started"),
   progress: z.number().min(0).max(100).default(0),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   coverUrl: z.string().url().optional().or(z.literal("")),
 });
 

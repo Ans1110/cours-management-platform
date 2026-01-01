@@ -11,7 +11,6 @@ import {
   Pencil,
   X,
   Loader2,
-  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +19,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { coursesApi, notesApi } from "@/api";
 import { noteSchema, type NoteInput } from "@/schemas";
 import type { Note } from "@/types";
+
+// Helper functions for date-based progress
+function calculateProgress(startDate?: string, endDate?: string): number {
+  if (!startDate || !endDate) return 0;
+
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  const now = Date.now();
+
+  if (now <= start) return 0;
+  if (now >= end) return 100;
+
+  const total = end - start;
+  const elapsed = now - start;
+  return Math.round((elapsed / total) * 100);
+}
+
+function getDaysRemaining(endDate: string): number {
+  const end = new Date(endDate).getTime();
+  const now = Date.now();
+  const diff = end - now;
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
 
 export default function CourseDetailPage() {
   const { id } = useParams();
@@ -64,9 +86,9 @@ export default function CourseDetailPage() {
     },
   });
 
-  const progressMutation = useMutation({
-    mutationFn: (progress: number) =>
-      coursesApi.updateProgress(courseId, progress),
+  const updateDatesMutation = useMutation({
+    mutationFn: (dates: { startDate?: string; endDate?: string }) =>
+      coursesApi.update(courseId, dates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["course", courseId] });
     },
@@ -171,38 +193,62 @@ export default function CourseDetailPage() {
         <CardHeader>
           <CardTitle className="text-white">Course Progress</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-slate-400">Progress</span>
-                <span className="text-sm font-medium text-white">
-                  {course.progress}%
-                </span>
-              </div>
-              <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
-                  style={{ width: `${course.progress}%` }}
-                />
-              </div>
+        <CardContent className="space-y-4">
+          {/* Auto-calculated progress bar */}
+          <div>
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-slate-400">Progress</span>
+              <span className="text-sm font-medium text-white">
+                {calculateProgress(course.startDate, course.endDate)}%
+              </span>
             </div>
-            <div className="flex gap-2">
-              {[0, 25, 50, 75, 100].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => progressMutation.mutate(value)}
-                  className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                    course.progress === value
-                      ? "bg-purple-500 text-white"
-                      : "bg-slate-700 text-slate-400 hover:bg-slate-600"
-                  }`}
-                >
-                  {value}%
-                </button>
-              ))}
+            <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+                style={{
+                  width: `${calculateProgress(
+                    course.startDate,
+                    course.endDate
+                  )}%`,
+                }}
+              />
             </div>
           </div>
+
+          {/* Date pickers */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Start Date</Label>
+              <Input
+                type="date"
+                value={course.startDate || ""}
+                onChange={(e) =>
+                  updateDatesMutation.mutate({ startDate: e.target.value })
+                }
+                className="bg-slate-700/50 border-slate-600 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">End Date</Label>
+              <Input
+                type="date"
+                value={course.endDate || ""}
+                onChange={(e) =>
+                  updateDatesMutation.mutate({ endDate: e.target.value })
+                }
+                className="bg-slate-700/50 border-slate-600 text-white"
+              />
+            </div>
+          </div>
+
+          {/* Status info */}
+          {course.startDate && course.endDate && (
+            <p className="text-sm text-slate-500">
+              {new Date(course.startDate).toLocaleDateString()} →{" "}
+              {new Date(course.endDate).toLocaleDateString()} (
+              {getDaysRemaining(course.endDate)} days remaining)
+            </p>
+          )}
         </CardContent>
       </Card>
 

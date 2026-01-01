@@ -35,6 +35,8 @@ export interface Course {
   category?: string;
   status: "not_started" | "in_progress" | "completed";
   progress: number;
+  startDate?: string;
+  endDate?: string;
   coverUrl?: string;
   createdAt: string;
   updatedAt: string;
