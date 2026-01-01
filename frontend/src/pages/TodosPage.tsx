@@ -76,9 +76,12 @@ export default function TodosPage() {
 
   const onSubmit = (data: TodoInput) => {
     if (editingTodo) {
-      updateMutation.mutate({ id: editingTodo.id, data });
+      updateMutation.mutate(
+        { id: editingTodo.id, data },
+        { onSuccess: closeModal }
+      );
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(data, { onSuccess: closeModal });
     }
   };
 

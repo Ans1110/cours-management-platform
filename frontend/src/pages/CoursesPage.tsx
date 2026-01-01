@@ -43,6 +43,8 @@ export default function CoursesPage() {
         category: course.category || "",
         status: course.status,
         progress: course.progress,
+        startDate: course.startDate || "",
+        endDate: course.endDate || "",
         coverUrl: course.coverUrl || "",
       });
     } else {
@@ -53,6 +55,8 @@ export default function CoursesPage() {
         category: "",
         status: "not_started",
         progress: 0,
+        startDate: "",
+        endDate: "",
         coverUrl: "",
       });
     }
@@ -263,6 +267,25 @@ export default function CoursesPage() {
                       min="0"
                       max="100"
                       {...register("progress", { valueAsNumber: true })}
+                      className="bg-slate-700/50 border-slate-600 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-200">Start Date</Label>
+                    <Input
+                      type="date"
+                      {...register("startDate")}
+                      className="bg-slate-700/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-200">End Date</Label>
+                    <Input
+                      type="date"
+                      {...register("endDate")}
                       className="bg-slate-700/50 border-slate-600 text-white"
                     />
                   </div>
