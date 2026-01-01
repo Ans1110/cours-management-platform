@@ -45,12 +45,6 @@ function AppContent() {
       />
       <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
       <Route
-        path="/register"
-        element={
-          isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />
-        }
-      />
-      <Route
         path="/"
         element={
           <ProtectedRoute>
