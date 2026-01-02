@@ -215,7 +215,9 @@ export default function NotesPage() {
         {filteredNotes.map((note, index) => (
           <div
             key={note.id}
-            className={`${pastelGradients[index % pastelGradients.length]} rounded-3xl p-5 soft-shadow hover:scale-[1.02] transition-transform relative group`}
+            className={`${
+              pastelGradients[index % pastelGradients.length]
+            } rounded-3xl p-5 soft-shadow hover:scale-[1.02] transition-transform relative group`}
           >
             {/* Action buttons */}
             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -387,16 +389,16 @@ export default function NotesPage() {
                             className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                              <File className="h-4 w-4 text-gray-400 shrink-0" />
                               <a
-                                href={`http://localhost:8080${attachment.fileUrl}`}
+                                href={`${import.meta.env.VITE_API_BASE_URL}${attachment.fileUrl}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-gray-600 hover:text-emerald-600 truncate"
                               >
                                 {attachment.fileName}
                               </a>
-                              <span className="text-xs text-gray-400 flex-shrink-0">
+                              <span className="text-xs text-gray-400 shrink-0">
                                 ({formatFileSize(attachment.fileSize)})
                               </span>
                             </div>
@@ -405,7 +407,7 @@ export default function NotesPage() {
                               onClick={() =>
                                 deleteAttachmentMutation.mutate(attachment.id)
                               }
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg flex-shrink-0"
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg shrink-0"
                             >
                               <Trash2 size={14} />
                             </button>

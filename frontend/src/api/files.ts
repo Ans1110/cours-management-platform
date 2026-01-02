@@ -7,7 +7,7 @@ export const filesApi = {
     formData.append("file", file);
     formData.append("noteId", noteId.toString());
 
-    const response = await fetch("http://localhost:8080/api/v1/files/upload", {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/files/upload`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,

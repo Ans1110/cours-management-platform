@@ -136,7 +136,7 @@ export default function LoginPage() {
                 className="h-12 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-medium"
                 onClick={() => {
                   window.location.href =
-                    "http://localhost:8080/api/v1/oauth2/authorization/google";
+                    `${import.meta.env.VITE_API_BASE_URL}/api/v1/oauth2/authorization/google`;
                 }}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ export default function LoginPage() {
                 className="h-12 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-medium"
                 onClick={() => {
                   window.location.href =
-                    "http://localhost:8080/api/v1/oauth2/authorization/github";
+                    `${import.meta.env.VITE_API_BASE_URL}/api/v1/oauth2/authorization/github`;
                 }}
               >
                 <svg

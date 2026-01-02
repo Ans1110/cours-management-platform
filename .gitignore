@@ -104,7 +104,7 @@ docker-compose.override.yml
 # Uncomment if you don't want to track generated docs
 # docs/_build/
 # site/
-# .claude
-# CLAUDE.md
-# spec.md
-# impl.md
+.claude
+CLAUDE.md
+spec.md
+impl.md

@@ -501,7 +501,7 @@ export default function CourseDetailPage() {
                             <div className="flex items-center gap-2 min-w-0">
                               <File className="h-4 w-4 text-gray-400 shrink-0" />
                               <a
-                                href={`http://localhost:8080${attachment.fileUrl}`}
+                                href={`${import.meta.env.VITE_API_BASE_URL}${attachment.fileUrl}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-gray-600 hover:text-emerald-600 truncate"
