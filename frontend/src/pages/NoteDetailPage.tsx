@@ -301,7 +301,7 @@ export default function NoteDetailPage() {
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <a
-                      href={`${import.meta.env.VITE_API_BASE_URL}${
+                      href={`${import.meta.env.VITE_API_BASE_URL}/api/v1${
                         attachment.fileUrl
                       }`}
                       target="_blank"

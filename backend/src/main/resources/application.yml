@@ -38,6 +38,12 @@ jwt:
   access-token-expiration: 900000      # 15 minutes
   refresh-token-expiration: 604800000  # 7 days
 
+app:
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+    domain: ${COOKIE_DOMAIN:}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+
 logging:
   level:
     com.coursemanagement: DEBUG

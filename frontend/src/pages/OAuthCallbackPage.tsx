@@ -1,54 +1,47 @@
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
+import { authApi } from "@/api/auth";
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { setUser } = useAuthStore();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const accessToken = searchParams.get("accessToken");
-    const refreshToken = searchParams.get("refreshToken");
-
-    if (accessToken && refreshToken) {
-      // Store tokens
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-
-      // Decode JWT to get user info (basic approach)
+    const completeOAuthLogin = async () => {
       try {
-        const payload = JSON.parse(atob(accessToken.split(".")[1]));
-        setUser({
-          id: payload.sub,
-          email: payload.email,
-          name: payload.email?.split("@")[0] || "User",
-          provider: "oauth",
-        });
+        // Cookies are already set by the backend, just fetch user info
+        const user = await authApi.me();
+        setUser(user);
+        navigate("/", { replace: true });
       } catch {
-        // If we can't decode, just set basic user
-        setUser({
-          id: 0,
-          email: "user@example.com",
-          name: "User",
-          provider: "oauth",
-        });
+        setError("Failed to complete sign in. Please try again.");
+        // Redirect to login after a delay
+        setTimeout(() => {
+          navigate("/login", { replace: true });
+        }, 2000);
       }
+    };
 
-      // Redirect to dashboard
-      navigate("/", { replace: true });
-    } else {
-      // No tokens, redirect to login
-      navigate("/login", { replace: true });
-    }
-  }, [searchParams, navigate, setUser]);
+    completeOAuthLogin();
+  }, [navigate, setUser]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA]">
       <div className="text-center">
-        <Loader2 className="h-12 w-12 animate-spin text-purple-500 mx-auto mb-4" />
-        <p className="text-white text-lg">Completing sign in...</p>
+        {error ? (
+          <>
+            <p className="text-red-500 text-lg mb-2">{error}</p>
+            <p className="text-gray-500">Redirecting to login...</p>
+          </>
+        ) : (
+          <>
+            <Loader2 className="h-12 w-12 animate-spin text-indigo-500 mx-auto mb-4" />
+            <p className="text-gray-700 text-lg">Completing sign in...</p>
+          </>
+        )}
       </div>
     </div>
   );

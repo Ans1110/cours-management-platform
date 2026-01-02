@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -41,6 +42,9 @@ public class NoteController {
     public ResponseEntity<Note> create(@RequestBody Note note,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         note.setUserId(userDetails.getId());
+        LocalDateTime now = LocalDateTime.now();
+        note.setCreatedAt(now);
+        note.setUpdatedAt(now);
         noteService.save(note);
         return ResponseEntity.ok(note);
     }

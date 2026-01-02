@@ -83,6 +83,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Rate Limiting -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.10.1</version>
+        </dependency>
+
         <!-- Dotenv for .env file support -->
         <dependency>
             <groupId>me.paulschwarz</groupId>

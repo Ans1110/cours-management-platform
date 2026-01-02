@@ -1,15 +1,17 @@
 package com.coursemanagement.controller;
 
+import com.coursemanagement.model.dto.StatusRequest;
+import com.coursemanagement.model.dto.TodoRequest;
 import com.coursemanagement.model.entity.Todo;
 import com.coursemanagement.security.CustomUserDetails;
 import com.coursemanagement.service.TodoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/todos")
@@ -39,8 +41,9 @@ public class TodoController {
     }
 
     @PostMapping
-    public ResponseEntity<Todo> create(@RequestBody Todo todo,
+    public ResponseEntity<Todo> create(@Valid @RequestBody TodoRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Todo todo = mapToTodo(request);
         todo.setUserId(userDetails.getId());
         todoService.save(todo);
         return ResponseEntity.ok(todo);
@@ -48,8 +51,9 @@ public class TodoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Todo> update(@PathVariable Long id,
-            @RequestBody Todo todo,
+            @Valid @RequestBody TodoRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Todo todo = mapToTodo(request);
         todo.setId(id);
         todoService.updateByIdAndUserId(todo, userDetails.getId());
         return ResponseEntity.ok(todo);
@@ -64,10 +68,20 @@ public class TodoController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<Todo> updateStatus(@PathVariable Long id,
-            @RequestBody Map<String, String> body,
+            @Valid @RequestBody StatusRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        String status = body.get("status");
-        Todo todo = todoService.updateStatus(id, status, userDetails.getId());
+        Todo todo = todoService.updateStatus(id, request.getStatus(), userDetails.getId());
         return ResponseEntity.ok(todo);
+    }
+
+    private Todo mapToTodo(TodoRequest request) {
+        Todo todo = new Todo();
+        todo.setTitle(request.getTitle());
+        todo.setDescription(request.getDescription());
+        todo.setPriority(request.getPriority());
+        todo.setStatus(request.getStatus());
+        todo.setDueDate(request.getDueDate());
+        todo.setCourseId(request.getCourseId());
+        return todo;
     }
 }

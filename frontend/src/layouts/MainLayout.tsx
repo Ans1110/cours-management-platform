@@ -8,7 +8,6 @@ import {
   LogOut,
   Menu,
   X,
-  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
@@ -85,12 +84,6 @@ export default function MainLayout() {
 
         {/* Bottom section */}
         <div className="pb-6 flex flex-col items-center gap-2">
-          <button
-            className="w-12 h-12 flex items-center justify-center rounded-2xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            title="Settings"
-          >
-            <Settings size={22} />
-          </button>
           <button
             onClick={handleLogout}
             className="w-12 h-12 flex items-center justify-center rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"

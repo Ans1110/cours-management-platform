@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import {
   BookOpen,
@@ -9,7 +8,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { coursesApi, notesApi, todosApi, curriculumsApi } from "@/api";
+import { useCourses, useNotes, useTodos, useCurriculums } from "@/hooks";
 import { useAuthStore } from "@/stores/authStore";
 
 // Helper function for date-based progress calculation
@@ -39,25 +38,10 @@ const pastelGradients = [
 export default function DashboardPage() {
   const { user } = useAuthStore();
 
-  const { data: courses = [] } = useQuery({
-    queryKey: ["courses"],
-    queryFn: coursesApi.list,
-  });
-
-  const { data: notes = [] } = useQuery({
-    queryKey: ["notes"],
-    queryFn: () => notesApi.list(),
-  });
-
-  const { data: todos = [] } = useQuery({
-    queryKey: ["todos"],
-    queryFn: () => todosApi.list(),
-  });
-
-  const { data: curriculums = [] } = useQuery({
-    queryKey: ["curriculums"],
-    queryFn: curriculumsApi.list,
-  });
+  const { data: courses = [] } = useCourses();
+  const { data: notes = [] } = useNotes();
+  const { data: todos = [] } = useTodos();
+  const { data: curriculums = [] } = useCurriculums();
 
   const completedCourses = courses.filter(
     (c) => c.status === "completed"

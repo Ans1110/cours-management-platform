@@ -5,6 +5,7 @@ import { Suspense, lazy, useEffect } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import LoadingPage from "@/pages/LoadingPage";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
+import { SessionExpiryModal } from "@/components/common/SessionExpiryModal";
 import { useAuthStore } from "@/stores/authStore";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -39,7 +40,9 @@ function AppContent() {
       <Routes>
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+          element={
+            isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />
+          }
         />
         <Route
           path="/register"
@@ -74,6 +77,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AppContent />
+        <SessionExpiryModal />
       </BrowserRouter>
     </QueryClientProvider>
   );

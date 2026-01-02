@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { User, AuthResponse } from "@/types";
+import type { User } from "@/types";
 import { authApi } from "@/api/auth";
+import { useSessionStore } from "@/stores/sessionStore";
 
 interface AuthState {
   user: User | null;
@@ -18,12 +19,6 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
-const handleAuthResponse = (response: AuthResponse) => {
-  localStorage.setItem("accessToken", response.accessToken);
-  localStorage.setItem("refreshToken", response.refreshToken);
-  return response.user;
-};
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -36,8 +31,14 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authApi.login({ email, password });
-          const user = handleAuthResponse(response);
-          set({ user, isAuthenticated: true, isLoading: false });
+          // Tokens are now stored in httpOnly cookies by the server
+          // Set session expiration time
+          if (response.expiresIn) {
+            useSessionStore
+              .getState()
+              .setExpiresAt(Date.now() + response.expiresIn);
+          }
+          set({ user: response.user, isAuthenticated: true, isLoading: false });
         } catch (error) {
           set({ error: (error as Error).message, isLoading: false });
           throw error;
@@ -48,8 +49,14 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authApi.register({ email, password, name });
-          const user = handleAuthResponse(response);
-          set({ user, isAuthenticated: true, isLoading: false });
+          // Tokens are now stored in httpOnly cookies by the server
+          // Set session expiration time
+          if (response.expiresIn) {
+            useSessionStore
+              .getState()
+              .setExpiresAt(Date.now() + response.expiresIn);
+          }
+          set({ user: response.user, isAuthenticated: true, isLoading: false });
         } catch (error) {
           set({ error: (error as Error).message, isLoading: false });
           throw error;
@@ -60,8 +67,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authApi.logout();
         } finally {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          // Server clears httpOnly cookies
           set({ user: null, isAuthenticated: false });
         }
       },
@@ -75,19 +81,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          set({ user: null, isAuthenticated: false });
-          return;
-        }
-
         set({ isLoading: true });
         try {
+          // Try to fetch current user - cookies will be sent automatically
           const user = await authApi.me();
           set({ user, isAuthenticated: true, isLoading: false });
         } catch {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          // Not authenticated or token expired
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },

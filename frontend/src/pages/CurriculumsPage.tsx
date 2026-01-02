@@ -1,21 +1,23 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Plus, X, Loader2, Calendar } from "lucide-react";
-import { coursesApi } from "@/api";
+import { useCourses } from "@/hooks";
 import type { Course } from "@/types";
 
 // Define time periods
 const PERIODS = [
-  { id: 1, label: "1", time: "08:00-08:50" },
-  { id: 2, label: "2", time: "09:00-09:50" },
-  { id: 3, label: "3", time: "10:00-10:50" },
-  { id: 4, label: "4", time: "11:00-11:50" },
-  { id: "lunch", label: "LUNCH", time: "12:00-13:00" },
-  { id: 5, label: "5", time: "13:00-13:50" },
-  { id: 6, label: "6", time: "14:00-14:50" },
-  { id: 7, label: "7", time: "15:00-15:50" },
-  { id: 8, label: "8", time: "16:00-16:50" },
-  { id: 9, label: "9", time: "17:00-17:50" },
+  { id: 1, label: "1", time: "08:10-09:00" },
+  { id: 2, label: "2", time: "09:10-10:00" },
+  { id: 3, label: "3", time: "10:20-11:10" },
+  { id: 4, label: "4", time: "11:20-12:10" },
+  { id: "lunch", label: "LUNCH", time: "12:10-13:00" },
+  { id: 5, label: "5", time: "13:10-14:00" },
+  { id: 6, label: "6", time: "14:10-15:00" },
+  { id: 7, label: "7", time: "15:20-16:10" },
+  { id: 8, label: "8", time: "16:20-17:10" },
+  { id: 9, label: "9", time: "17:20-18:10" },
+  { id: 10, label: "10", time: "18:20-19:10" },
+  { id: 11, label: "11", time: "19:20-20:10" },
+  { id: 12, label: "12", time: "20:20-21:10" },
 ];
 
 const DAYS = ["MON", "TUE", "WED", "THU", "FRI"];
@@ -71,10 +73,7 @@ export default function CurriculumsPage() {
     return initial;
   });
 
-  const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: ["courses"],
-    queryFn: coursesApi.list,
-  });
+  const { data: courses = [], isLoading: coursesLoading } = useCourses();
 
   const coursesById = useMemo(() => {
     const map: Record<number, Course> = {};
@@ -177,7 +176,9 @@ export default function CurriculumsPage() {
                 <tr
                   key={period.id}
                   className={
-                    period.id === "lunch" ? "bg-amber-50/50" : "hover:bg-gray-50/50"
+                    period.id === "lunch"
+                      ? "bg-amber-50/50"
+                      : "hover:bg-gray-50/50"
                   }
                 >
                   <td className="p-3 border-r border-t border-gray-100">

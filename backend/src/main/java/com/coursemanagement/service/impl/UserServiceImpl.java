@@ -2,14 +2,17 @@ package com.coursemanagement.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.coursemanagement.exception.BadRequestException;
+import com.coursemanagement.mapper.RefreshTokenMapper;
 import com.coursemanagement.mapper.UserMapper;
 import com.coursemanagement.model.dto.AuthResponse;
 import com.coursemanagement.model.dto.LoginRequest;
 import com.coursemanagement.model.dto.RegisterRequest;
+import com.coursemanagement.model.entity.RefreshToken;
 import com.coursemanagement.model.entity.User;
 import com.coursemanagement.security.JwtTokenProvider;
 import com.coursemanagement.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +24,15 @@ import java.time.LocalDateTime;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final UserMapper userMapper;
+    private final RefreshTokenMapper refreshTokenMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Value("${jwt.access-token-expiration}")
+    private long accessTokenExpiration;
+
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
 
     @Override
     @Transactional
@@ -45,6 +55,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userMapper.selectByEmail(request.getEmail());
 
@@ -60,9 +71,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public AuthResponse refreshToken(String refreshToken) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new BadRequestException("Invalid refresh token");
+        }
+
+        // Validate token exists in database and is not revoked
+        RefreshToken storedToken = refreshTokenMapper.findValidToken(refreshToken);
+        if (storedToken == null) {
+            throw new BadRequestException("Refresh token has been revoked or expired");
         }
 
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
@@ -72,7 +90,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BadRequestException("User not found");
         }
 
+        // Revoke old refresh token (rotation)
+        refreshTokenMapper.revokeToken(refreshToken);
+
         return generateAuthResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void logout(Long userId) {
+        // Revoke all refresh tokens for the user
+        refreshTokenMapper.revokeAllUserTokens(userId);
+    }
+
+    @Override
+    @Transactional
+    public void revokeRefreshToken(String token) {
+        refreshTokenMapper.revokeToken(token);
     }
 
     @Override
@@ -87,13 +121,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private AuthResponse generateAuthResponse(User user) {
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId(), user.getEmail());
+        String refreshTokenValue = jwtTokenProvider.generateRefreshToken(user.getId(), user.getEmail());
+
+        // Store refresh token in database
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUserId(user.getId());
+        refreshToken.setToken(refreshTokenValue);
+        refreshToken.setExpiresAt(LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000));
+        refreshToken.setRevoked(false);
+        refreshToken.setCreatedAt(LocalDateTime.now());
+        refreshTokenMapper.insert(refreshToken);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshTokenValue)
                 .tokenType("Bearer")
-                .expiresIn(900000L) // 15 minutes
+                .expiresIn(accessTokenExpiration)
                 .user(AuthResponse.UserDto.builder()
                         .id(user.getId())
                         .email(user.getEmail())

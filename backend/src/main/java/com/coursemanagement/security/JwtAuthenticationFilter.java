@@ -1,5 +1,6 @@
 package com.coursemanagement.security;
 
+import com.coursemanagement.util.CookieUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final CookieUtil cookieUtil;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -50,10 +52,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
+        // First try Authorization header (for backwards compatibility)
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
+
+        // Then try httpOnly cookie
+        String cookieToken = cookieUtil.getAccessTokenFromCookie(request);
+        if (StringUtils.hasText(cookieToken)) {
+            return cookieToken;
+        }
+
         return null;
     }
 }

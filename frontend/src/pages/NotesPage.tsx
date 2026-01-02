@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -17,7 +16,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { notesApi, coursesApi, filesApi } from "@/api";
+import {
+  useNotes,
+  useCreateNote,
+  useUpdateNote,
+  useDeleteNote,
+  useCourses,
+  useAttachments,
+  useUploadAttachment,
+  useDeleteAttachment,
+} from "@/hooks";
 import { noteSchema, type NoteInput } from "@/schemas";
 import type { Note, Attachment } from "@/types";
 
@@ -33,82 +41,39 @@ const pastelGradients = [
 ];
 
 export default function NotesPage() {
-  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: notes = [], isLoading } = useQuery({
-    queryKey: ["notes"],
-    queryFn: () => notesApi.list(),
-  });
+  // Data hooks
+  const { data: notes = [], isLoading } = useNotes();
+  const { data: courses = [] } = useCourses();
+  const { data: attachments = [] } = useAttachments(editingNote?.id);
 
-  const { data: courses = [] } = useQuery({
-    queryKey: ["courses"],
-    queryFn: coursesApi.list,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: notesApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      closeModal();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Note> }) =>
-      notesApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      closeModal();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: notesApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  // Attachments query - only fetch when editing a note
-  const { data: attachments = [] } = useQuery({
-    queryKey: ["attachments", editingNote?.id],
-    queryFn: () => filesApi.getByNoteId(editingNote!.id),
-    enabled: !!editingNote?.id,
-  });
-
-  const deleteAttachmentMutation = useMutation({
-    mutationFn: filesApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["attachments", editingNote?.id],
-      });
-    },
-  });
+  // Mutation hooks
+  const createMutation = useCreateNote();
+  const updateMutation = useUpdateNote();
+  const deleteMutation = useDeleteNote();
+  const uploadMutation = useUploadAttachment();
+  const deleteAttachmentMutation = useDeleteAttachment(editingNote?.id);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !editingNote) return;
+    if (!files || files.length === 0) return;
 
-    setIsUploading(true);
-    try {
-      for (const file of Array.from(files)) {
-        await filesApi.upload(file, editingNote.id);
+    const fileArray = Array.from(files);
+
+    if (editingNote) {
+      for (const file of fileArray) {
+        await uploadMutation.mutateAsync({ file, noteId: editingNote.id });
       }
-      queryClient.invalidateQueries({
-        queryKey: ["attachments", editingNote.id],
-      });
-    } catch (error) {
-      console.error("Upload failed:", error);
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+    } else {
+      setPendingFiles((prev) => [...prev, ...fileArray]);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -151,14 +116,32 @@ export default function NotesPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingNote(null);
+    setPendingFiles([]);
     reset();
   };
 
-  const onSubmit = (data: NoteInput) => {
+  const removePendingFile = (index: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async (data: NoteInput) => {
     if (editingNote) {
-      updateMutation.mutate({ id: editingNote.id, data });
+      updateMutation.mutate(
+        { id: editingNote.id, data },
+        { onSuccess: closeModal }
+      );
     } else {
-      createMutation.mutate(data);
+      try {
+        const newNote = await createMutation.mutateAsync(data);
+        if (pendingFiles.length > 0 && newNote?.id) {
+          for (const file of pendingFiles) {
+            await uploadMutation.mutateAsync({ file, noteId: newNote.id });
+          }
+        }
+        closeModal();
+      } catch (error) {
+        console.error("Failed to create note:", error);
+      }
     }
   };
 
@@ -346,77 +329,108 @@ export default function NotesPage() {
                   </select>
                 </div>
 
-                {/* File Upload Section - only show when editing */}
-                {editingNote && (
-                  <div className="space-y-3">
-                    <Label className="text-gray-700 font-medium">
-                      Attachments
-                    </Label>
+                {/* File Upload Section */}
+                <div className="space-y-3">
+                  <Label className="text-gray-700 font-medium">
+                    Attachments
+                  </Label>
 
-                    {/* Upload Button */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="file-upload"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
-                      >
-                        {isUploading ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Upload className="h-4 w-4 mr-2" />
-                        )}
-                        {isUploading ? "Uploading..." : "Upload Files"}
-                      </Button>
-                    </div>
-
-                    {/* Attachments List */}
-                    {attachments.length > 0 && (
-                      <div className="space-y-2 max-h-32 overflow-y-auto">
-                        {attachments.map((attachment: Attachment) => (
-                          <div
-                            key={attachment.id}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <File className="h-4 w-4 text-gray-400 shrink-0" />
-                              <a
-                                href={`${import.meta.env.VITE_API_BASE_URL}${attachment.fileUrl}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-gray-600 hover:text-emerald-600 truncate"
-                              >
-                                {attachment.fileName}
-                              </a>
-                              <span className="text-xs text-gray-400 shrink-0">
-                                ({formatFileSize(attachment.fileSize)})
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                deleteAttachmentMutation.mutate(attachment.id)
-                              }
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg shrink-0"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  {/* Upload Button */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadMutation.isPending}
+                    >
+                      {uploadMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      {uploadMutation.isPending
+                        ? "Uploading..."
+                        : "Upload Files"}
+                    </Button>
                   </div>
-                )}
+
+                  {/* Pending Files (for new notes) */}
+                  {!editingNote && pendingFiles.length > 0 && (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {pendingFiles.map((file, index) => (
+                        <div
+                          key={`pending-${index}`}
+                          className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <File className="h-4 w-4 text-amber-500 shrink-0" />
+                            <span className="text-sm text-gray-600 truncate">
+                              {file.name}
+                            </span>
+                            <span className="text-xs text-gray-400 shrink-0">
+                              ({formatFileSize(file.size)})
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePendingFile(index)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg shrink-0"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Existing Attachments (for editing) */}
+                  {editingNote && attachments.length > 0 && (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {attachments.map((attachment: Attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <File className="h-4 w-4 text-gray-400 shrink-0" />
+                            <a
+                              href={`${import.meta.env.VITE_API_BASE_URL}/api/v1${
+                                attachment.fileUrl
+                              }`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-gray-600 hover:text-emerald-600 truncate"
+                            >
+                              {attachment.fileName}
+                            </a>
+                            <span className="text-xs text-gray-400 shrink-0">
+                              ({formatFileSize(attachment.fileSize)})
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              deleteAttachmentMutation.mutate(attachment.id)
+                            }
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg shrink-0"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex gap-3 pt-4">
                   <Button

@@ -14,6 +14,10 @@ public interface UserService extends IService<User> {
 
     AuthResponse refreshToken(String refreshToken);
 
+    void logout(Long userId);
+
+    void revokeRefreshToken(String token);
+
     User getCurrentUser(Long userId);
 
     boolean existsByEmail(String email);

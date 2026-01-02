@@ -2,24 +2,11 @@ import { apiClient } from "./client";
 import type { Attachment } from "@/types";
 
 export const filesApi = {
-  upload: async (file: File, noteId: number): Promise<Attachment> => {
+  upload: (file: File, noteId: number): Promise<Attachment> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("noteId", noteId.toString());
-
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/files/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error("Upload failed");
-    }
-
-    return response.json();
+    return apiClient.postFormData<Attachment>("/files/upload", formData);
   },
 
   getByNoteId: (noteId: number) =>
