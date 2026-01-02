@@ -101,7 +101,8 @@ docker-compose.override.yml
 *.rej
 
 # -------------------- Documentation --------------------
-.claude
+.claude/
 CLAUDE.md
 spec.md
 impl.md
+.vscode/
