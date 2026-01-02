@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 bg-gradient-to-br from-lime-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
             <BookOpen className="h-8 w-8 text-white" />
           </div>
         </div>
