@@ -101,9 +101,6 @@ docker-compose.override.yml
 *.rej
 
 # -------------------- Documentation --------------------
-# Uncomment if you don't want to track generated docs
-# docs/_build/
-# site/
 .claude
 CLAUDE.md
 spec.md
