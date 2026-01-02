@@ -3,9 +3,9 @@ spring:
     name: course-management
 
   datasource:
-    url: jdbc:mysql://localhost:3306/course_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:Aa19850228}
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   security:
@@ -17,8 +17,8 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: openid, profile, email
           github:
-            client-id: ${GITHUB_CLIENT_ID:Ov23liAasWvtjG7AuATr}
-            client-secret: ${GITHUB_CLIENT_SECRET:62ace9d405541757d7de52a3e17c90418ee67058}
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
             scope: user:email, read:user
 
 server:
@@ -34,7 +34,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 jwt:
-  secret: ${JWT_SECRET:a9f3c2e6c1b84e9e91a4c0b6fbb3e6a7f5d1c9d4e0a7c8b6f2d3a9e4c1b7f8}
+  secret: ${JWT_SECRET}
   access-token-expiration: 900000      # 15 minutes
   refresh-token-expiration: 604800000  # 7 days
 
