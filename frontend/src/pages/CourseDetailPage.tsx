@@ -221,7 +221,9 @@ export default function CourseDetailPage() {
   }
 
   const progress = calculateProgress(course.startDate, course.endDate);
-  const daysRemaining = course.endDate ? getDaysRemaining(course.endDate) : null;
+  const daysRemaining = course.endDate
+    ? getDaysRemaining(course.endDate)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -249,9 +251,7 @@ export default function CourseDetailPage() {
               <BookOpen size={14} />
               {course.category || "Uncategorized"}
             </span>
-            {course.description && (
-              <span className="text-gray-400">|</span>
-            )}
+            {course.description && <span className="text-gray-400">|</span>}
             {course.description && (
               <span className="truncate max-w-md">{course.description}</span>
             )}
@@ -266,14 +266,16 @@ export default function CourseDetailPage() {
             <Target className="h-5 w-5 text-indigo-500" />
             Course Progress
           </h2>
-          <span className="text-2xl font-bold text-indigo-600">{progress}%</span>
+          <span className="text-2xl font-bold text-indigo-600">
+            {progress}%
+          </span>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-6">
           <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+              className="h-full bg-linear-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -285,7 +287,9 @@ export default function CourseDetailPage() {
           <div className="pastel-blue-gradient rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Calendar size={16} className="text-blue-600" />
-              <span className="text-sm font-medium text-gray-600">Start Date</span>
+              <span className="text-sm font-medium text-gray-600">
+                Start Date
+              </span>
             </div>
             <Input
               type="date"
@@ -301,7 +305,9 @@ export default function CourseDetailPage() {
           <div className="pastel-pink-gradient rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Calendar size={16} className="text-pink-600" />
-              <span className="text-sm font-medium text-gray-600">End Date</span>
+              <span className="text-sm font-medium text-gray-600">
+                End Date
+              </span>
             </div>
             <Input
               type="date"
@@ -317,7 +323,9 @@ export default function CourseDetailPage() {
           <div className="pastel-yellow-gradient rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Clock size={16} className="text-amber-600" />
-              <span className="text-sm font-medium text-gray-600">Days Left</span>
+              <span className="text-sm font-medium text-gray-600">
+                Days Left
+              </span>
             </div>
             <p className="text-2xl font-bold text-gray-800">
               {daysRemaining !== null ? daysRemaining : "—"}
@@ -360,7 +368,9 @@ export default function CourseDetailPage() {
             {notes.map((note, index) => (
               <div
                 key={note.id}
-                className={`${pastelGradients[index % pastelGradients.length]} rounded-2xl p-5 relative group hover:scale-[1.02] transition-transform`}
+                className={`${
+                  pastelGradients[index % pastelGradients.length]
+                } rounded-2xl p-5 relative group hover:scale-[1.02] transition-transform`}
               >
                 {/* Action buttons */}
                 <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -501,7 +511,9 @@ export default function CourseDetailPage() {
                             <div className="flex items-center gap-2 min-w-0">
                               <File className="h-4 w-4 text-gray-400 shrink-0" />
                               <a
-                                href={`${import.meta.env.VITE_API_BASE_URL}${attachment.fileUrl}`}
+                                href={`${import.meta.env.VITE_API_BASE_URL}${
+                                  attachment.fileUrl
+                                }`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-gray-600 hover:text-emerald-600 truncate"

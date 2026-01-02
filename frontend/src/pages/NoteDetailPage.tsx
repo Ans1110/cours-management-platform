@@ -183,7 +183,7 @@ export default function NoteDetailPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
                 <FileText className="h-5 w-5 text-emerald-600" />
               </div>
               <h1 className="text-2xl font-bold text-gray-800 truncate">
@@ -193,7 +193,7 @@ export default function NoteDetailPage() {
             <Button
               onClick={openEditModal}
               variant="outline"
-              className="border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl flex-shrink-0"
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl shrink-0"
             >
               <Pencil className="h-4 w-4 mr-2" />
               Edit
@@ -211,7 +211,9 @@ export default function NoteDetailPage() {
             )}
             <div className="flex items-center gap-1">
               <Calendar size={14} />
-              <span>Updated {new Date(note.updatedAt).toLocaleDateString()}</span>
+              <span>
+                Updated {new Date(note.updatedAt).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </div>
@@ -230,7 +232,9 @@ export default function NoteDetailPage() {
               </p>
             </div>
           ) : (
-            <p className="text-gray-400 italic">No content yet. Click Edit to add content.</p>
+            <p className="text-gray-400 italic">
+              No content yet. Click Edit to add content.
+            </p>
           )}
         </div>
       </div>
@@ -282,7 +286,7 @@ export default function NoteDetailPage() {
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors group"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0">
                       {getFileIcon(attachment.fileType)}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -297,7 +301,9 @@ export default function NoteDetailPage() {
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <a
-                      href={`${import.meta.env.VITE_API_BASE_URL}${attachment.fileUrl}`}
+                      href={`${import.meta.env.VITE_API_BASE_URL}${
+                        attachment.fileUrl
+                      }`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"

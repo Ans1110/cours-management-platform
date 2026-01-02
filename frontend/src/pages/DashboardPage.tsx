@@ -274,7 +274,7 @@ export default function DashboardPage() {
                   className="flex items-start gap-3 p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
                 >
                   <div
-                    className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
+                    className={`w-3 h-3 rounded-full mt-1.5 shrink-0 ${
                       todo.priority === "high"
                         ? "bg-red-400"
                         : todo.priority === "medium"

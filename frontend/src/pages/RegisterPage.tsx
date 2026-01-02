@@ -41,7 +41,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 bg-linear-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
             <BookOpen className="h-8 w-8 text-white" />
           </div>
         </div>
@@ -52,7 +52,9 @@ export default function RegisterPage() {
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
               Create Account
             </h1>
-            <p className="text-gray-500">Start organizing your learning journey</p>
+            <p className="text-gray-500">
+              Start organizing your learning journey
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -125,7 +127,10 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+              <Label
+                htmlFor="confirmPassword"
+                className="text-gray-700 font-medium"
+              >
                 Confirm Password
               </Label>
               <Input

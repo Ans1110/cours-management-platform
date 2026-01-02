@@ -196,7 +196,7 @@ export default function TodosPage() {
                   {/* Checkbox */}
                   <button
                     onClick={() => toggleStatus(todo)}
-                    className="flex-shrink-0 mt-0.5 text-gray-400 hover:text-orange-500 transition-colors"
+                    className="shrink-0 mt-0.5 text-gray-400 hover:text-orange-500 transition-colors"
                   >
                     {todo.status === "completed" ? (
                       <CheckCircle2 className="h-6 w-6 text-emerald-500" />
@@ -334,7 +334,9 @@ export default function TodosPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-medium">Priority</Label>
+                    <Label className="text-gray-700 font-medium">
+                      Priority
+                    </Label>
                     <select
                       {...register("priority")}
                       className="w-full h-11 px-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700"
@@ -346,7 +348,9 @@ export default function TodosPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-medium">Due Date</Label>
+                    <Label className="text-gray-700 font-medium">
+                      Due Date
+                    </Label>
                     <Input
                       type="date"
                       {...register("dueDate")}

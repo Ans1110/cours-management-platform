@@ -50,7 +50,7 @@ export default function MainLayout() {
       >
         {/* Logo */}
         <div className="p-4 flex items-center justify-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-blue-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-linear-to-br from-teal-400 to-blue-600 rounded-xl flex items-center justify-center">
             <BookOpen className="h-5 w-5 text-white" />
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function MainLayout() {
             <LogOut size={22} />
           </button>
           {/* User Avatar */}
-          <div className="mt-2 w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-semibold text-sm cursor-pointer hover:scale-105 transition-transform">
+          <div className="mt-2 w-10 h-10 rounded-xl bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-semibold text-sm cursor-pointer hover:scale-105 transition-transform">
             {user?.name?.charAt(0).toUpperCase() || "U"}
           </div>
         </div>

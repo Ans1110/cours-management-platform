@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-lime-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 bg-linear-to-br from-lime-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
             <BookOpen className="h-8 w-8 text-white" />
           </div>
         </div>
@@ -135,8 +135,9 @@ export default function LoginPage() {
                 variant="outline"
                 className="h-12 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-medium"
                 onClick={() => {
-                  window.location.href =
-                    `${import.meta.env.VITE_API_BASE_URL}/api/v1/oauth2/authorization/google`;
+                  window.location.href = `${
+                    import.meta.env.VITE_API_BASE_URL
+                  }/api/v1/oauth2/authorization/google`;
                 }}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -164,8 +165,9 @@ export default function LoginPage() {
                 variant="outline"
                 className="h-12 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-medium"
                 onClick={() => {
-                  window.location.href =
-                    `${import.meta.env.VITE_API_BASE_URL}/api/v1/oauth2/authorization/github`;
+                  window.location.href = `${
+                    import.meta.env.VITE_API_BASE_URL
+                  }/api/v1/oauth2/authorization/github`;
                 }}
               >
                 <svg
