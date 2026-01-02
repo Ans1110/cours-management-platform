@@ -61,7 +61,6 @@ public class CurriculumServiceImpl extends ServiceImpl<CurriculumMapper, Curricu
     public void addCourse(Long curriculumId, Long courseId, Long userId) {
         getByIdAndUserId(curriculumId, userId); // Verify ownership
 
-        // Check if already exists
         CurriculumCourse existing = curriculumCourseMapper.selectOne(
                 new LambdaQueryWrapper<CurriculumCourse>()
                         .eq(CurriculumCourse::getCurriculumId, curriculumId)
@@ -71,7 +70,6 @@ public class CurriculumServiceImpl extends ServiceImpl<CurriculumMapper, Curricu
             throw new BadRequestException("Course already in curriculum");
         }
 
-        // Get max order index
         Long maxOrder = curriculumCourseMapper.selectCount(
                 new LambdaQueryWrapper<CurriculumCourse>()
                         .eq(CurriculumCourse::getCurriculumId, curriculumId));

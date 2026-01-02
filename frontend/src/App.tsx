@@ -9,6 +9,7 @@ import DashboardPage from "@/pages/DashboardPage";
 import CoursesPage from "@/pages/CoursesPage";
 import CourseDetailPage from "@/pages/CourseDetailPage";
 import NotesPage from "@/pages/NotesPage";
+import NoteDetailPage from "@/pages/NoteDetailPage";
 import TodosPage from "@/pages/TodosPage";
 import CurriculumsPage from "@/pages/CurriculumsPage";
 import OAuthCallbackPage from "@/pages/OAuthCallbackPage";
@@ -56,6 +57,7 @@ function AppContent() {
         <Route path="courses" element={<CoursesPage />} />
         <Route path="courses/:id" element={<CourseDetailPage />} />
         <Route path="notes" element={<NotesPage />} />
+        <Route path="notes/:id" element={<NoteDetailPage />} />
         <Route path="todos" element={<TodosPage />} />
         <Route path="curriculums" element={<CurriculumsPage />} />
       </Route>

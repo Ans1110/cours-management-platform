@@ -2,18 +2,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { registerSchema, type RegisterInput } from "@/schemas";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -45,21 +37,28 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4">
-      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-white">
-            Create Account
-          </CardTitle>
-          <CardDescription className="text-slate-400">
-            Start organizing your learning journey
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] px-4 py-8">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <BookOpen className="h-8 w-8 text-white" />
+          </div>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-3xl soft-shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+              Create Account
+            </h1>
+            <p className="text-gray-500">Start organizing your learning journey</p>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {error && (
               <div
-                className="p-3 text-sm text-red-400 bg-red-950/50 border border-red-800 rounded-lg"
+                className="p-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl cursor-pointer"
                 onClick={clearError}
               >
                 {error}
@@ -67,77 +66,77 @@ export default function RegisterPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-200">
+              <Label htmlFor="name" className="text-gray-700 font-medium">
                 Full Name
               </Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="John Doe"
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+                className="bg-gray-50 border-gray-200 rounded-xl h-12 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 {...register("name")}
               />
               {errors.name && (
-                <p className="text-sm text-red-400">{errors.name.message}</p>
+                <p className="text-sm text-red-500">{errors.name.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-200">
+              <Label htmlFor="email" className="text-gray-700 font-medium">
                 Email
               </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+                className="bg-gray-50 border-gray-200 rounded-xl h-12 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 {...register("email")}
               />
               {errors.email && (
-                <p className="text-sm text-red-400">{errors.email.message}</p>
+                <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-200">
+              <Label htmlFor="password" className="text-gray-700 font-medium">
                 Password
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500 pr-10"
+                  placeholder="Create a password"
+                  className="bg-gray-50 border-gray-200 rounded-xl h-12 pr-12 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   {...register("password")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-400">
+                <p className="text-sm text-red-500">
                   {errors.password.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-slate-200">
+              <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
                 Confirm Password
               </Label>
               <Input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+                placeholder="Confirm your password"
+                className="bg-gray-50 border-gray-200 rounded-xl h-12 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 {...register("confirmPassword")}
               />
               {errors.confirmPassword && (
-                <p className="text-sm text-red-400">
+                <p className="text-sm text-red-500">
                   {errors.confirmPassword.message}
                 </p>
               )}
@@ -145,12 +144,12 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-base"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Creating account...
                 </>
               ) : (
@@ -158,19 +157,19 @@ export default function RegisterPage() {
               )}
             </Button>
           </form>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <p className="text-slate-400 text-sm">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-purple-400 hover:text-purple-300 font-medium"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-gray-500 text-sm mt-6">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="text-indigo-600 hover:text-indigo-700 font-medium"
+          >
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

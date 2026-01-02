@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, Link } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -11,14 +11,19 @@ import {
   Pencil,
   X,
   Loader2,
+  Upload,
+  File,
+  Calendar,
+  Clock,
+  Target,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { coursesApi, notesApi } from "@/api";
+import { coursesApi, notesApi, filesApi } from "@/api";
 import { noteSchema, type NoteInput } from "@/schemas";
-import type { Note } from "@/types";
+import type { Note, Attachment } from "@/types";
 
 // Helper functions for date-based progress
 function calculateProgress(startDate?: string, endDate?: string): number {
@@ -43,12 +48,23 @@ function getDaysRemaining(endDate: string): number {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
+const pastelGradients = [
+  "pastel-mint-gradient",
+  "pastel-lavender-gradient",
+  "pastel-yellow-gradient",
+  "pastel-pink-gradient",
+  "pastel-blue-gradient",
+  "pastel-orange-gradient",
+];
+
 export default function CourseDetailPage() {
   const { id } = useParams();
   const courseId = Number(id);
   const queryClient = useQueryClient();
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ["course", courseId],
@@ -94,6 +110,50 @@ export default function CourseDetailPage() {
     },
   });
 
+  // Attachments query - only fetch when editing a note
+  const { data: attachments = [] } = useQuery({
+    queryKey: ["attachments", editingNote?.id],
+    queryFn: () => filesApi.getByNoteId(editingNote!.id),
+    enabled: !!editingNote?.id,
+  });
+
+  const deleteAttachmentMutation = useMutation({
+    mutationFn: filesApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["attachments", editingNote?.id],
+      });
+    },
+  });
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !editingNote) return;
+
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        await filesApi.upload(file, editingNote.id);
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["attachments", editingNote.id],
+      });
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
   const {
     register,
     handleSubmit,
@@ -128,137 +188,163 @@ export default function CourseDetailPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return "text-green-400 bg-green-500/20";
+        return "bg-emerald-100 text-emerald-700";
       case "in_progress":
-        return "text-yellow-400 bg-yellow-500/20";
+        return "bg-amber-100 text-amber-700";
       default:
-        return "text-slate-400 bg-slate-500/20";
+        return "bg-gray-100 text-gray-600";
     }
   };
 
   if (courseLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
       </div>
     );
   }
 
   if (!course) {
     return (
-      <div className="text-center py-12">
-        <p className="text-slate-400">Course not found</p>
+      <div className="bg-white rounded-3xl p-12 soft-shadow text-center">
+        <p className="text-gray-500 mb-4">Course not found</p>
         <Link to="/courses">
-          <Button className="mt-4">Back to Courses</Button>
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">
+            Back to Courses
+          </Button>
         </Link>
       </div>
     );
   }
 
+  const progress = calculateProgress(course.startDate, course.endDate);
+  const daysRemaining = course.endDate ? getDaysRemaining(course.endDate) : null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-4">
         <Link
           to="/courses"
-          className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+          className="p-2.5 bg-white hover:bg-gray-50 rounded-xl shadow-sm transition-colors"
         >
-          <ArrowLeft className="h-5 w-5 text-slate-400" />
+          <ArrowLeft className="h-5 w-5 text-gray-600" />
         </Link>
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold text-white">{course.title}</h1>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-bold text-gray-800">{course.title}</h1>
             <span
-              className={`px-2 py-1 rounded-md text-sm capitalize ${getStatusColor(
+              className={`px-3 py-1 rounded-xl text-sm font-medium capitalize ${getStatusBadge(
                 course.status
               )}`}
             >
               {course.status.replace("_", " ")}
             </span>
           </div>
-          {course.description && (
-            <p className="text-slate-400">{course.description}</p>
-          )}
-          <p className="text-sm text-slate-500 mt-1">
-            {course.category || "Uncategorized"}
-          </p>
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <span className="flex items-center gap-1">
+              <BookOpen size={14} />
+              {course.category || "Uncategorized"}
+            </span>
+            {course.description && (
+              <span className="text-gray-400">|</span>
+            )}
+            {course.description && (
+              <span className="truncate max-w-md">{course.description}</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Progress Section */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white">Course Progress</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Auto-calculated progress bar */}
-          <div>
-            <div className="flex justify-between mb-2">
-              <span className="text-sm text-slate-400">Progress</span>
-              <span className="text-sm font-medium text-white">
-                {calculateProgress(course.startDate, course.endDate)}%
-              </span>
+      {/* Progress Card */}
+      <div className="bg-white rounded-3xl p-6 soft-shadow">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <Target className="h-5 w-5 text-indigo-500" />
+            Course Progress
+          </h2>
+          <span className="text-2xl font-bold text-indigo-600">{progress}%</span>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-6">
+          <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Start Date */}
+          <div className="pastel-blue-gradient rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar size={16} className="text-blue-600" />
+              <span className="text-sm font-medium text-gray-600">Start Date</span>
             </div>
-            <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
-                style={{
-                  width: `${calculateProgress(
-                    course.startDate,
-                    course.endDate
-                  )}%`,
-                }}
-              />
-            </div>
+            <Input
+              type="date"
+              value={course.startDate || ""}
+              onChange={(e) =>
+                updateDatesMutation.mutate({ startDate: e.target.value })
+              }
+              className="bg-white/60 border-0 rounded-xl h-10 text-gray-800"
+            />
           </div>
 
-          {/* Date pickers */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-slate-300">Start Date</Label>
-              <Input
-                type="date"
-                value={course.startDate || ""}
-                onChange={(e) =>
-                  updateDatesMutation.mutate({ startDate: e.target.value })
-                }
-                className="bg-slate-700/50 border-slate-600 text-white"
-              />
+          {/* End Date */}
+          <div className="pastel-pink-gradient rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar size={16} className="text-pink-600" />
+              <span className="text-sm font-medium text-gray-600">End Date</span>
             </div>
-            <div className="space-y-2">
-              <Label className="text-slate-300">End Date</Label>
-              <Input
-                type="date"
-                value={course.endDate || ""}
-                onChange={(e) =>
-                  updateDatesMutation.mutate({ endDate: e.target.value })
-                }
-                className="bg-slate-700/50 border-slate-600 text-white"
-              />
-            </div>
+            <Input
+              type="date"
+              value={course.endDate || ""}
+              onChange={(e) =>
+                updateDatesMutation.mutate({ endDate: e.target.value })
+              }
+              className="bg-white/60 border-0 rounded-xl h-10 text-gray-800"
+            />
           </div>
 
-          {/* Status info */}
-          {course.startDate && course.endDate && (
-            <p className="text-sm text-slate-500">
-              {new Date(course.startDate).toLocaleDateString()} →{" "}
-              {new Date(course.endDate).toLocaleDateString()} (
-              {getDaysRemaining(course.endDate)} days remaining)
+          {/* Days Remaining */}
+          <div className="pastel-yellow-gradient rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock size={16} className="text-amber-600" />
+              <span className="text-sm font-medium text-gray-600">Days Left</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-800">
+              {daysRemaining !== null ? daysRemaining : "—"}
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+
+          {/* Notes Count */}
+          <div className="pastel-green-gradient rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText size={16} className="text-emerald-600" />
+              <span className="text-sm font-medium text-gray-600">Notes</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-800">{notes.length}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Notes Section */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-white">Course Notes</h2>
+      <div className="bg-white rounded-3xl p-6 soft-shadow">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-emerald-500" />
+            Course Notes
+          </h2>
           <Button
             onClick={() => openNoteModal()}
-            className="bg-gradient-to-r from-emerald-600 to-teal-600"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Note
@@ -267,124 +353,193 @@ export default function CourseDetailPage() {
 
         {notesLoading ? (
           <div className="flex items-center justify-center h-32">
-            <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
           </div>
         ) : notes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {notes.map((note) => (
-              <Card
+            {notes.map((note, index) => (
+              <div
                 key={note.id}
-                className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-colors"
+                className={`${pastelGradients[index % pastelGradients.length]} rounded-2xl p-5 relative group hover:scale-[1.02] transition-transform`}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-emerald-400" />
-                      <CardTitle className="text-lg text-white">
-                        {note.title}
-                      </CardTitle>
+                {/* Action buttons */}
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => openNoteModal(note)}
+                    className="p-2 bg-white/80 hover:bg-white rounded-xl text-gray-600 hover:text-emerald-600 transition-colors"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => deleteNoteMutation.mutate(note.id)}
+                    className="p-2 bg-white/80 hover:bg-white rounded-xl text-gray-600 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+
+                <Link to={`/notes/${note.id}`} className="block">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center">
+                      <FileText size={16} className="text-gray-600" />
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => openNoteModal(note)}
-                        className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => deleteNoteMutation.mutate(note.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(note.updatedAt).toLocaleDateString()}
+                    </span>
                   </div>
-                </CardHeader>
-                <CardContent>
+                  <h3 className="font-bold text-gray-800 mb-2 line-clamp-1 hover:text-emerald-700 transition-colors">
+                    {note.title}
+                  </h3>
                   {note.content && (
-                    <p className="text-sm text-slate-400 line-clamp-3 whitespace-pre-wrap">
+                    <p className="text-sm text-gray-600 line-clamp-2 whitespace-pre-wrap">
                       {note.content}
                     </p>
                   )}
-                  <p className="text-xs text-slate-500 mt-2">
-                    {new Date(note.updatedAt).toLocaleDateString()}
-                  </p>
-                </CardContent>
-              </Card>
+                </Link>
+              </div>
             ))}
           </div>
         ) : (
-          <Card className="bg-slate-800/50 border-slate-700 border-dashed">
-            <CardContent className="py-8 text-center">
-              <FileText className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 mb-3">
-                No notes yet for this course
-              </p>
-              <Button
-                onClick={() => openNoteModal()}
-                variant="outline"
-                className="border-slate-600 text-slate-300"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create First Note
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-8 w-8 text-emerald-600" />
+            </div>
+            <p className="text-gray-500 mb-4">No notes yet for this course</p>
+            <Button
+              onClick={() => openNoteModal()}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create First Note
+            </Button>
+          </div>
         )}
       </div>
 
       {/* Note Modal */}
       {isNoteModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-lg bg-slate-800 border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-lg bg-white rounded-3xl soft-shadow-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white">
+              <h2 className="text-xl font-bold text-gray-800">
                 {editingNote ? "Edit Note" : "New Note"}
-              </CardTitle>
+              </h2>
               <button
                 onClick={closeNoteModal}
-                className="text-slate-400 hover:text-white"
+                className="p-2 hover:bg-gray-100 rounded-xl text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X size={20} />
               </button>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-6">
               <form onSubmit={handleSubmit(onNoteSubmit)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-200">Title *</Label>
+                  <Label className="text-gray-700 font-medium">Title *</Label>
                   <Input
                     {...register("title")}
-                    className="bg-slate-700/50 border-slate-600 text-white"
+                    className="bg-gray-50 border-gray-200 rounded-xl h-11"
                     placeholder="Note title"
                   />
                   {errors.title && (
-                    <p className="text-sm text-red-400">
+                    <p className="text-sm text-red-500">
                       {errors.title.message}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-200">Content</Label>
+                  <Label className="text-gray-700 font-medium">Content</Label>
                   <textarea
                     {...register("content")}
-                    className="w-full h-40 px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md text-white resize-none"
+                    className="w-full h-40 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     placeholder="Write your notes here..."
                   />
                 </div>
+
+                {/* File Upload Section - only show when editing */}
+                {editingNote && (
+                  <div className="space-y-3">
+                    <Label className="text-gray-700 font-medium">
+                      Attachments
+                    </Label>
+
+                    {/* Upload Button */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="course-note-file-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        {isUploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        {isUploading ? "Uploading..." : "Upload Files"}
+                      </Button>
+                    </div>
+
+                    {/* Attachments List */}
+                    {attachments.length > 0 && (
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {attachments.map((attachment: Attachment) => (
+                          <div
+                            key={attachment.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <File className="h-4 w-4 text-gray-400 shrink-0" />
+                              <a
+                                href={`http://localhost:8080${attachment.fileUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-gray-600 hover:text-emerald-600 truncate"
+                              >
+                                {attachment.fileName}
+                              </a>
+                              <span className="text-xs text-gray-400 shrink-0">
+                                ({formatFileSize(attachment.fileSize)})
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                deleteAttachmentMutation.mutate(attachment.id)
+                              }
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg shrink-0"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-4">
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={closeNoteModal}
-                    className="flex-1 text-slate-400 hover:text-white"
+                    className="flex-1 h-11 rounded-xl text-gray-600 hover:bg-gray-100"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600"
+                    className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
                     disabled={
                       createNoteMutation.isPending ||
                       updateNoteMutation.isPending
@@ -401,8 +556,8 @@ export default function CourseDetailPage() {
                   </Button>
                 </div>
               </form>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </div>

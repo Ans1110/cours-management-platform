@@ -94,6 +94,13 @@ export interface CurriculumCourse {
   createdAt: string;
 }
 
+export interface Category {
+  id: number;
+  userId: number;
+  name: string;
+  createdAt: string;
+}
+
 // Input types for create/update
 export type CreateCourse = Omit<
   Course,

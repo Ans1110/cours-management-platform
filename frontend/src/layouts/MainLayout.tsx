@@ -8,9 +8,9 @@ import {
   LogOut,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 
 const navItems = [
@@ -18,7 +18,7 @@ const navItems = [
   { path: "/courses", icon: BookOpen, label: "Courses" },
   { path: "/notes", icon: FileText, label: "Notes" },
   { path: "/todos", icon: CheckSquare, label: "Todos" },
-  { path: "/curriculums", icon: Layers, label: "Curriculums" },
+  { path: "/curriculums", icon: Layers, label: "Schedule" },
 ];
 
 export default function MainLayout() {
@@ -33,74 +33,74 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-[#F5F7FA]">
       {/* Mobile menu button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-800 rounded-lg text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white rounded-2xl shadow-md text-gray-600 hover:text-gray-900"
       >
-        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
 
-      {/* Sidebar */}
+      {/* Sidebar - Icon only style like reference */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-slate-800/80 backdrop-blur-xl border-r border-slate-700 transform transition-transform duration-300 z-40 ${
+        className={`fixed left-0 top-0 h-full w-20 bg-white/80 backdrop-blur-xl border-r border-gray-100 transform transition-transform duration-300 z-40 flex flex-col ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-6 border-b border-slate-700">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
-              Course Manager
-            </h1>
+        {/* Logo */}
+        <div className="p-4 flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-blue-600 rounded-xl flex items-center justify-center">
+            <BookOpen className="h-5 w-5 text-white" />
           </div>
+        </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
-            {navItems.map((item) => {
-              const isActive =
-                location.pathname === item.path ||
-                (item.path !== "/" && location.pathname.startsWith(item.path));
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? "bg-gradient-to-r from-purple-600/20 to-indigo-600/20 text-white border border-purple-500/30"
-                      : "text-slate-400 hover:text-white hover:bg-slate-700/50"
-                  }`}
-                >
-                  <item.icon size={20} />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+        {/* Navigation */}
+        <nav className="flex-1 flex flex-col items-center py-6 gap-2">
+          {navItems.map((item) => {
+            const isActive =
+              location.pathname === item.path ||
+              (item.path !== "/" && location.pathname.startsWith(item.path));
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={`relative w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-200 group ${
+                  isActive
+                    ? "bg-indigo-100 text-indigo-600"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                }`}
+                title={item.label}
+              >
+                <item.icon size={22} />
+                {/* Tooltip */}
+                <span className="absolute left-full ml-3 px-3 py-1.5 bg-gray-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
 
-          {/* User section */}
-          <div className="p-4 border-t border-slate-700">
-            <div className="flex items-center gap-3 mb-4 px-2">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold">
-                {user?.name?.charAt(0).toUpperCase() || "U"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {user?.name}
-                </p>
-                <p className="text-xs text-slate-400 truncate">{user?.email}</p>
-              </div>
-            </div>
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-700/50"
-            >
-              <LogOut size={18} className="mr-2" />
-              Logout
-            </Button>
+        {/* Bottom section */}
+        <div className="pb-6 flex flex-col items-center gap-2">
+          <button
+            className="w-12 h-12 flex items-center justify-center rounded-2xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            title="Settings"
+          >
+            <Settings size={22} />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-12 h-12 flex items-center justify-center rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+            title="Logout"
+          >
+            <LogOut size={22} />
+          </button>
+          {/* User Avatar */}
+          <div className="mt-2 w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-semibold text-sm cursor-pointer hover:scale-105 transition-transform">
+            {user?.name?.charAt(0).toUpperCase() || "U"}
           </div>
         </div>
       </aside>
@@ -108,14 +108,16 @@ export default function MainLayout() {
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main content */}
-      <main className="lg:ml-64 min-h-screen p-6 lg:p-8">
-        <Outlet />
+      <main className="lg:ml-20 min-h-screen">
+        <div className="max-w-7xl mx-auto p-6 lg:p-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

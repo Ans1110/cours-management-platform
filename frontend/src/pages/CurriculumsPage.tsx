@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, X, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, X, Loader2, Calendar } from "lucide-react";
 import { coursesApi } from "@/api";
 import type { Course } from "@/types";
 
@@ -20,6 +19,13 @@ const PERIODS = [
 ];
 
 const DAYS = ["MON", "TUE", "WED", "THU", "FRI"];
+const DAY_LABELS: Record<string, string> = {
+  MON: "Monday",
+  TUE: "Tuesday",
+  WED: "Wednesday",
+  THU: "Thursday",
+  FRI: "Friday",
+};
 
 type TimetableSlot = {
   day: string;
@@ -29,6 +35,17 @@ type TimetableSlot = {
 
 // Local storage key for timetable
 const TIMETABLE_KEY = "curriculum_timetable";
+
+const pastelColors = [
+  { bg: "bg-pink-100", border: "border-pink-300", text: "text-pink-700" },
+  { bg: "bg-purple-100", border: "border-purple-300", text: "text-purple-700" },
+  { bg: "bg-blue-100", border: "border-blue-300", text: "text-blue-700" },
+  { bg: "bg-green-100", border: "border-green-300", text: "text-green-700" },
+  { bg: "bg-yellow-100", border: "border-yellow-300", text: "text-yellow-700" },
+  { bg: "bg-orange-100", border: "border-orange-300", text: "text-orange-700" },
+  { bg: "bg-teal-100", border: "border-teal-300", text: "text-teal-700" },
+  { bg: "bg-indigo-100", border: "border-indigo-300", text: "text-indigo-700" },
+];
 
 export default function CurriculumsPage() {
   const [isSelectingCourse, setIsSelectingCourse] = useState<{
@@ -99,190 +116,210 @@ export default function CurriculumsPage() {
   };
 
   const getCourseColor = (courseId: number) => {
-    const colors = [
-      "bg-blue-500/30 border-blue-400",
-      "bg-purple-500/30 border-purple-400",
-      "bg-green-500/30 border-green-400",
-      "bg-orange-500/30 border-orange-400",
-      "bg-pink-500/30 border-pink-400",
-      "bg-cyan-500/30 border-cyan-400",
-      "bg-yellow-500/30 border-yellow-400",
-      "bg-red-500/30 border-red-400",
-    ];
-    return colors[courseId % colors.length];
+    return pastelColors[courseId % pastelColors.length];
   };
+
+  // Count scheduled sessions
+  const scheduledCount = timetable.filter((s) => s.courseId !== null).length;
 
   if (coursesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Weekly Schedule</h1>
-          <p className="text-slate-400">Organize your course schedule</p>
+          <h1 className="text-3xl font-bold text-gray-800">Weekly Schedule</h1>
+          <p className="text-gray-500 mt-1">Organize your course schedule</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="pastel-blue-gradient rounded-2xl px-5 py-3 soft-shadow">
+            <div className="flex items-center gap-2">
+              <Calendar size={18} className="text-blue-600" />
+              <span className="font-semibold text-gray-800">
+                {scheduledCount} sessions
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Timetable Grid */}
-      <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead>
-                <tr className="bg-slate-700/50">
-                  <th className="w-20 p-3 text-left text-slate-400 font-medium border-r border-slate-600"></th>
-                  {DAYS.map((day) => (
-                    <th
-                      key={day}
-                      className="p-3 text-center text-white font-semibold border-r border-slate-600 last:border-r-0"
-                    >
-                      {day}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {PERIODS.map((period) => (
-                  <tr
-                    key={period.id}
-                    className={period.id === "lunch" ? "bg-slate-600/30" : ""}
+      <div className="bg-white rounded-3xl soft-shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[800px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="w-24 p-4 text-left text-gray-500 font-medium text-sm border-r border-gray-100">
+                  Time
+                </th>
+                {DAYS.map((day) => (
+                  <th
+                    key={day}
+                    className="p-4 text-center font-semibold border-r border-gray-100 last:border-r-0"
                   >
-                    <td className="p-2 border-r border-t border-slate-600 text-center">
-                      <div className="text-sm font-medium text-slate-300">
+                    <span className="text-indigo-600">{day}</span>
+                    <span className="block text-xs text-gray-400 font-normal mt-0.5">
+                      {DAY_LABELS[day]}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {PERIODS.map((period) => (
+                <tr
+                  key={period.id}
+                  className={
+                    period.id === "lunch" ? "bg-amber-50/50" : "hover:bg-gray-50/50"
+                  }
+                >
+                  <td className="p-3 border-r border-t border-gray-100">
+                    <div className="text-center">
+                      <div className="text-sm font-semibold text-gray-700">
                         {period.label}
                       </div>
-                      <div className="text-xs text-slate-500">
-                        {period.time}
-                      </div>
-                    </td>
-                    {DAYS.map((day) => {
-                      if (period.id === "lunch") {
-                        return (
-                          <td
-                            key={day}
-                            className="p-2 border-r border-t border-slate-600 last:border-r-0"
-                          >
-                            <div className="h-12 flex items-center justify-center">
-                              <span className="text-slate-500 text-sm">—</span>
-                            </div>
-                          </td>
-                        );
-                      }
-
-                      const slot = getSlot(day, period.id);
-                      const course = slot?.courseId
-                        ? coursesById[slot.courseId]
-                        : null;
-                      const isSelecting =
-                        isSelectingCourse?.day === day &&
-                        isSelectingCourse?.period === period.id;
-
+                      <div className="text-xs text-gray-400">{period.time}</div>
+                    </div>
+                  </td>
+                  {DAYS.map((day) => {
+                    if (period.id === "lunch") {
                       return (
                         <td
                           key={day}
-                          className="p-1 border-r border-t border-slate-600 last:border-r-0"
+                          className="p-2 border-r border-t border-gray-100 last:border-r-0"
                         >
-                          {course ? (
-                            <div
-                              className={`h-14 rounded-lg border-l-4 px-2 py-1 ${getCourseColor(
-                                course.id
-                              )} relative group`}
+                          <div className="h-16 flex items-center justify-center">
+                            <span className="text-amber-400 text-sm font-medium">
+                              Lunch Break
+                            </span>
+                          </div>
+                        </td>
+                      );
+                    }
+
+                    const slot = getSlot(day, period.id);
+                    const course = slot?.courseId
+                      ? coursesById[slot.courseId]
+                      : null;
+                    const isSelecting =
+                      isSelectingCourse?.day === day &&
+                      isSelectingCourse?.period === period.id;
+                    const colors = course ? getCourseColor(course.id) : null;
+
+                    return (
+                      <td
+                        key={day}
+                        className="p-2 border-r border-t border-gray-100 last:border-r-0"
+                      >
+                        {course && colors ? (
+                          <div
+                            className={`h-16 rounded-2xl border-l-4 px-3 py-2 ${colors.bg} ${colors.border} relative group cursor-default`}
+                          >
+                            <p
+                              className={`text-sm font-semibold ${colors.text} truncate`}
                             >
-                              <p className="text-sm font-medium text-white truncate">
-                                {course.title}
-                              </p>
-                              <p className="text-xs text-slate-400">
-                                {course.category || "Course"}
-                              </p>
-                              <button
-                                onClick={() => clearSlot(day, period.id)}
-                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-700 rounded"
-                              >
-                                <X size={12} className="text-slate-400" />
-                              </button>
-                            </div>
-                          ) : isSelecting ? (
-                            <div className="h-14 bg-slate-700/50 rounded-lg p-1 overflow-y-auto">
-                              <div className="space-y-1">
-                                {courses.map((c) => (
+                              {course.title}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {course.category || "Course"}
+                            </p>
+                            <button
+                              onClick={() => clearSlot(day, period.id)}
+                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/60 rounded-lg"
+                            >
+                              <X size={14} className="text-gray-500" />
+                            </button>
+                          </div>
+                        ) : isSelecting ? (
+                          <div className="h-16 bg-gray-50 rounded-2xl p-2 overflow-y-auto border-2 border-indigo-200">
+                            <div className="space-y-1">
+                              {courses.map((c) => {
+                                const cColors = getCourseColor(c.id);
+                                return (
                                   <button
                                     key={c.id}
                                     onClick={() =>
                                       assignCourse(day, period.id, c.id)
                                     }
-                                    className="w-full text-left text-xs p-1 hover:bg-slate-600 rounded truncate text-slate-300"
+                                    className={`w-full text-left text-xs p-1.5 ${cColors.bg} hover:opacity-80 rounded-lg truncate ${cColors.text} font-medium`}
                                   >
                                     {c.title}
                                   </button>
-                                ))}
-                                <button
-                                  onClick={() => setIsSelectingCourse(null)}
-                                  className="w-full text-left text-xs p-1 text-slate-500 hover:bg-slate-600 rounded"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
+                                );
+                              })}
+                              <button
+                                onClick={() => setIsSelectingCourse(null)}
+                                className="w-full text-left text-xs p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg"
+                              >
+                                Cancel
+                              </button>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                setIsSelectingCourse({ day, period: period.id })
-                              }
-                              className="h-14 w-full rounded-lg border-2 border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-700/30 transition-colors flex items-center justify-center"
-                            >
-                              <Plus size={16} className="text-slate-500" />
-                            </button>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              setIsSelectingCourse({ day, period: period.id })
+                            }
+                            className="h-16 w-full rounded-2xl border-2 border-dashed border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all flex items-center justify-center group"
+                          >
+                            <Plus
+                              size={18}
+                              className="text-gray-300 group-hover:text-indigo-400"
+                            />
+                          </button>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Available Courses */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white text-lg">
-            Available Courses
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {courses.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {courses.map((course) => (
+      <div className="bg-white rounded-3xl p-6 soft-shadow">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
+          Available Courses
+        </h2>
+        {courses.length > 0 ? (
+          <div className="flex flex-wrap gap-3">
+            {courses.map((course) => {
+              const colors = getCourseColor(course.id);
+              return (
                 <div
                   key={course.id}
-                  className={`px-3 py-2 rounded-lg border-l-4 ${getCourseColor(
-                    course.id
-                  )} cursor-default`}
+                  className={`px-4 py-3 rounded-2xl border-l-4 ${colors.bg} ${colors.border}`}
                 >
-                  <p className="text-sm font-medium text-white">
+                  <p className={`text-sm font-semibold ${colors.text}`}>
                     {course.title}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-gray-500">
                     {course.category || "No category"}
                   </p>
                 </div>
-              ))}
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Calendar className="h-8 w-8 text-indigo-600" />
             </div>
-          ) : (
-            <p className="text-slate-400 text-sm">
+            <p className="text-gray-500">
               No courses available. Create some courses first!
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
