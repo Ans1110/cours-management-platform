@@ -29,11 +29,16 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Show loading while checking auth to prevent redirect loops
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <Suspense fallback={<LoadingPage />}>
