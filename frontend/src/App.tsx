@@ -33,7 +33,8 @@ function AppContent() {
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   // Show loading while checking auth to prevent redirect loops
   if (isLoading) {
