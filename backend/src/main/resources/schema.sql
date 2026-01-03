@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS courses (
     category VARCHAR(100),
     status VARCHAR(50) DEFAULT 'not_started',
     progress INT DEFAULT 0,
+    start_date DATE,
+    end_date DATE,
     cover_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
