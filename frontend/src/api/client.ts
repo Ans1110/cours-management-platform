@@ -1,4 +1,6 @@
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || window.location.origin}/api/v1`;
+const API_BASE_URL = `${
+  import.meta.env.VITE_API_BASE_URL || window.location.origin
+}/api/v1`;
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
@@ -89,8 +91,8 @@ class ApiClient {
     }
   }
 
-  get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "GET" });
+  get<T>(endpoint: string, skipAuth?: boolean): Promise<T> {
+    return this.request<T>(endpoint, { method: "GET", skipAuth });
   }
 
   post<T>(endpoint: string, body?: unknown, skipAuth?: boolean): Promise<T> {

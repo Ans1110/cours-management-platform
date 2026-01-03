@@ -24,7 +24,9 @@ export const authApi = {
   },
 
   me: (): Promise<User> => {
-    return apiClient.get<User>("/auth/me");
+    // skipAuth: true - don't trigger refresh/redirect on 401
+    // This is called during checkAuth() to verify if user is logged in
+    return apiClient.get<User>("/auth/me", true);
   },
 };
 
