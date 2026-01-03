@@ -114,13 +114,30 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Indexes
+-- Indexes (using DROP IF EXISTS to make script idempotent)
+DROP INDEX IF EXISTS idx_refresh_tokens_user_id ON refresh_tokens;
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+
+DROP INDEX IF EXISTS idx_refresh_tokens_token ON refresh_tokens;
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+
+DROP INDEX IF EXISTS idx_categories_user_id ON categories;
 CREATE INDEX idx_categories_user_id ON categories(user_id);
+
+DROP INDEX IF EXISTS idx_courses_user_id ON courses;
 CREATE INDEX idx_courses_user_id ON courses(user_id);
+
+DROP INDEX IF EXISTS idx_notes_user_id ON notes;
 CREATE INDEX idx_notes_user_id ON notes(user_id);
+
+DROP INDEX IF EXISTS idx_notes_course_id ON notes;
 CREATE INDEX idx_notes_course_id ON notes(course_id);
+
+DROP INDEX IF EXISTS idx_todos_user_id ON todos;
 CREATE INDEX idx_todos_user_id ON todos(user_id);
+
+DROP INDEX IF EXISTS idx_curriculums_user_id ON curriculums;
 CREATE INDEX idx_curriculums_user_id ON curriculums(user_id);
+
+DROP INDEX IF EXISTS idx_curriculum_courses_curriculum_id ON curriculum_courses;
 CREATE INDEX idx_curriculum_courses_curriculum_id ON curriculum_courses(curriculum_id);
