@@ -8,6 +8,11 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
   security:
     oauth2:
       client:
