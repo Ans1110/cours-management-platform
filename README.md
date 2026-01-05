@@ -4,7 +4,7 @@ A full-stack course management platform for organizing learning resources, track
 
 ## Live Demo
 
-- **Frontend:** https://cours-management-eacd.up.railway.app/
+- **Frontend:** https://course-management-st.up.railway.app/
 - **Backend API:** https://cours-management-platform-api.up.railway.app
 
 ## Features
